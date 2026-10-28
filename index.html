@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur de Paie RCAR / CNOPS Maroc 2026 / 2027</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        rcar: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#16a34a',
+                            600: '#15803d',
+                            700: '#166534',
+                            800: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Print styling for Payslip */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-payslip, #printable-payslip * {
+                visibility: visible;
+            }
+            #printable-payslip {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                color: black;
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-brand-900 text-white shadow-lg sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-brand-500 p-2 rounded-lg text-white shadow-md">
+                        <i class="fa-solid fa-calculator text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg sm:text-xl font-bold tracking-tight">PaieMaroc RCAR & CNOPS</h1>
+                        <p class="text-xs text-brand-100 hidden sm:block">Simulateur Fiscal & Social RCAR / CNOPS (Barème 2026 vs Barème 2027)</p>
+                    </div>
+                </div>
+
+                <!-- Global Quick Action / Info Badge -->
+                <div class="flex items-center space-x-2">
+                    <span class="bg-emerald-500/20 text-emerald-300 text-xs px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Régime RCAR (6%) & CNOPS (2.5%)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 mb-6 flex flex-wrap gap-1 no-print">
+            <button onclick="switchTab('tab-sim')" id="btn-tab-sim" class="tab-btn flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 bg-brand-800 text-white shadow">
+                <i class="fa-solid fa-sliders text-brand-500"></i> Simulateur RCAR / CNOPS
+            </button>
+            <button onclick="switchTab('tab-fiche')" id="btn-tab-fiche" class="tab-btn flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100">
+                <i class="fa-solid fa-file-invoice-dollar text-slate-500"></i> Bulletin de Paie RCAR
+            </button>
+            <button onclick="switchTab('tab-cas')" id="btn-tab-cas" class="tab-btn flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100">
+                <i class="fa-solid fa-list-check text-slate-500"></i> Cas Pratique (15 000 DH)
+            </button>
+            <button onclick="switchTab('tab-formulas')" id="btn-tab-formulas" class="tab-btn flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100">
+                <i class="fa-solid fa-table text-slate-500"></i> Formules Excel & Barèmes
+            </button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 1: SIMULATEUR DYNAMIQUE ET COMPARATEUR -->
+        <!-- ========================================== -->
+        <div id="tab-sim" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Sidebar Inputs -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-5">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <h2 class="font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-user-gear text-brand-600"></i> Saisie des Paramètres
+                            </h2>
+                            <button onclick="resetInputs()" class="text-xs text-brand-600 hover:text-brand-800 font-medium">Réinitialiser</button>
+                        </div>
+
+                        <!-- Choix du régime social -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Régime Social / Retraite & Santé</label>
+                            <select id="select-regime" onchange="calculateAll()" class="w-full rounded-lg border-slate-300 text-sm font-semibold border py-2 px-3 focus:ring-brand-500 focus:border-brand-500">
+                                <option value="RCAR" selected>Régime RCAR (6% Plafond 16k) + CNOPS (2.5%)</option>
+                                <option value="CNSS">Régime Privé CNSS (4.48%) + AMO (2.26%)</option>
+                            </select>
+                            <p class="text-[11px] text-slate-400 mt-1" id="regime-desc">RCAR: 6% du SBI (plafond 16 000 DH/mois) | CNOPS: 2.5% du SBI sans plafond.</p>
+                        </div>
+
+                        <!-- Salaire Brut Input & Slider -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-sm font-medium text-slate-700">Salaire Brut Global (DH)</label>
+                                <span class="text-xs font-semibold text-brand-600" id="brut-display">15 000 DH</span>
+                            </div>
+                            <div class="relative rounded-md shadow-sm">
+                                <input type="number" id="input-brut" min="0" step="250" value="15000" oninput="syncBrutInput(this.value)"
+                                    class="block w-full rounded-lg border-slate-300 pl-3 pr-12 py-2 text-slate-900 border focus:border-brand-500 focus:ring-brand-500 text-base font-semibold">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400 font-medium text-xs">DH</div>
+                            </div>
+                            <input type="range" id="slider-brut" min="3000" max="60000" step="500" value="15000" oninput="syncBrutSlider(this.value)"
+                                class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600 mt-3">
+                            <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                                <span>3 000 DH</span>
+                                <span>30 000 DH</span>
+                                <span>60 000 DH</span>
+                            </div>
+                        </div>
+
+                        <!-- Paramètres Spécifiques RCAR -->
+                        <div id="rcar-options-box" class="bg-emerald-50/60 p-3.5 rounded-lg border border-emerald-200/80 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-emerald-900 uppercase">Cotisations RCAR</span>
+                                <span class="text-[10px] bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded font-bold">Public/Semi-Public</span>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-slate-700 mb-1">RCAR Régime Général (RG)</label>
+                                <div class="text-xs text-emerald-800 font-medium bg-white p-2 rounded border border-emerald-200 flex justify-between items-center">
+                                    <span>Part Salariée : <strong>6.00%</strong></span>
+                                    <span class="text-[10px] text-slate-500">Plafond: 24 000 DH (4xCNSS)</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-xs font-medium text-slate-700">RCAR Régime Complémentaire (RC)</label>
+                                    <span class="text-[10px] text-slate-500">Facultatif</span>
+                                </div>
+                                <select id="rcar-rc-rate" onchange="calculateAll()" class="w-full rounded-md border-slate-300 text-xs py-1.5 font-semibold text-slate-800 border focus:ring-emerald-500 focus:border-emerald-500">
+                                    <option value="0">0% - Non souscrit</option>
+                                    <option value="3">3% - Taux Complémentaire standard</option>
+                                    <option value="6" selected>6% - Taux Complémentaire renforcé</option>
+                                    <option value="9">9% - Taux Complémentaire supérieur</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Indemnités Non Imposables -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Indemnités Non Imposables (DH)</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <input type="number" id="input-exore" min="0" step="100" value="0" oninput="calculateAll()"
+                                    class="block w-full rounded-lg border-slate-300 pl-3 pr-12 py-2 text-slate-900 border focus:border-brand-500 focus:ring-brand-500 text-sm">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400 font-medium text-xs">DH</div>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">Ex: Transport dans les limites, frais de déplacement réels...</p>
+                        </div>
+
+                        <!-- Personnes à charge -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Personnes à Charge</label>
+                            <div class="grid grid-cols-7 gap-1">
+                                <button type="button" onclick="setCharge(0)" class="charge-btn border border-slate-200 py-1.5 rounded-md text-xs font-semibold hover:bg-slate-50">0</button>
+                                <button type="button" onclick="setCharge(1)" class="charge-btn border border-slate-200 py-1.5 rounded-md text-xs font-semibold hover:bg-slate-50">1</button>
+                                <button type="button" onclick="setCharge(2)" class="charge-btn bg-brand-800 text-white border border-brand-800 py-1.5 rounded-md text-xs font-semibold">2</button>
+                                <button type="button" onclick="setCharge(3)" class="charge-btn border border-slate-200 py-1.5 rounded-md text-xs font-semibold hover:bg-slate-50">3</button>
+                                <button type="button" onclick="setCharge(4)" class="charge-btn border border-slate-200 py-1.5 rounded-md text-xs font-semibold hover:bg-slate-50">4</button>
+                                <button type="button" onclick="setCharge(5)" class="charge-btn border border-slate-200 py-1.5 rounded-md text-xs font-semibold hover:bg-slate-50">5</button>
+                                <button type="button" onclick="setCharge(6)" class="charge-btn border border-slate-200 py-1.5 rounded-md text-xs font-semibold hover:bg-slate-50">6</button>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">50 DH / mois par personne (Max 6 personnes = 300 DH)</p>
+                        </div>
+
+                        <!-- Paramètres Rapides pré-définis -->
+                        <div class="pt-3 border-t border-slate-100">
+                            <label class="block text-xs font-medium text-slate-500 mb-2">Profils Salariaux RCAR</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="setQuickBrut(8000)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-700 font-medium transition">8 000 DH</button>
+                                <button onclick="setQuickBrut(15000)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-700 font-medium transition">15 000 DH</button>
+                                <button onclick="setQuickBrut(25000)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-700 font-medium transition">25 000 DH</button>
+                                <button onclick="setQuickBrut(35000)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-700 font-medium transition">35 000 DH</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Main Results & Comparison Panel -->
+                <div class="lg:col-span-8 space-y-6">
+
+                    <!-- Impact Réforme Summary Card -->
+                    <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-slate-900 rounded-xl p-6 text-white shadow-md relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 opacity-10">
+                            <i class="fa-solid fa-building-columns text-9xl"></i>
+                        </div>
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="bg-emerald-500/30 text-emerald-300 text-xs font-bold px-2.5 py-1 rounded-md border border-emerald-400/30 uppercase tracking-wider">
+                                        Impact Nouveau Barème IR (Réforme Frais Pro 45%)
+                                    </span>
+                                    <h3 class="text-xl font-bold mt-2">Gain sur le Salaire Net RCAR</h3>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-3xl font-extrabold text-emerald-400" id="gain-mensuel">+0.00 DH</span>
+                                    <span class="block text-xs text-slate-300" id="gain-pourcentage">+0.0% de gain</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-slate-700/60 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                                <div class="bg-white/5 rounded-lg p-2">
+                                    <span class="text-[11px] text-slate-300 block">Gain Annuel Net</span>
+                                    <span class="text-base font-bold text-white" id="gain-annuel">0 DH</span>
+                                </div>
+                                <div class="bg-white/5 rounded-lg p-2">
+                                    <span class="text-[11px] text-slate-300 block">Économie d'Impôt IR</span>
+                                    <span class="text-base font-bold text-emerald-300" id="eco-ir">0 DH/mois</span>
+                                </div>
+                                <div class="bg-white/5 rounded-lg p-2">
+                                    <span class="text-[11px] text-slate-300 block">Taux Effectif IR 2026</span>
+                                    <span class="text-base font-bold text-amber-300" id="taux-effectif-2026">0%</span>
+                                </div>
+                                <div class="bg-white/5 rounded-lg p-2">
+                                    <span class="text-[11px] text-slate-300 block">Taux Effectif IR 2027</span>
+                                    <span class="text-base font-bold text-emerald-300" id="taux-effectif-2027">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Grid 2026 vs 2027 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <!-- BARÈME 2026 -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between">
+                            <div>
+                                <div class="bg-slate-100 px-5 py-3 border-b border-slate-200 flex justify-between items-center">
+                                    <span class="font-bold text-slate-700 flex items-center gap-2">
+                                        <i class="fa-regular fa-calendar text-slate-500"></i> Barème 2026
+                                    </span>
+                                    <span class="text-xs bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded">2026</span>
+                                </div>
+
+                                <div class="p-5 space-y-3">
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600">Salaire Brut Global</span>
+                                        <span class="font-semibold text-slate-800" id="v26-brut">15 000.00 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600" id="v26-retraite-label">Cotisations RCAR (6% Max 960.00)</span>
+                                        <span class="font-semibold text-rose-600" id="v26-retraite">-900.00 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600" id="v26-sante-label">Cotisations CNOPS (2.50%)</span>
+                                        <span class="font-semibold text-rose-600" id="v26-sante">-375.00 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <div>
+                                            <span class="text-slate-600 block">Frais Professionnels</span>
+                                            <span class="text-[10px] text-slate-400" id="v26-frais-rate">Taux: 25% | Plafond: 2916.67 DH</span>
+                                        </div>
+                                        <span class="font-semibold text-slate-700" id="v26-frais">-2 916.67 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 bg-slate-50 px-2 rounded font-medium">
+                                        <span class="text-slate-700">Salaire Net Imposable (SNI)</span>
+                                        <span class="text-slate-900 font-bold" id="v26-sni">10 808.33 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600">IR Brut (Tranche <span id="v26-ir-tranche">34%</span>)</span>
+                                        <span class="font-semibold text-slate-700" id="v26-ir-brut">1 841.50 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600">Charges de Famille (<span id="v26-nb-charge">2</span> pers)</span>
+                                        <span class="font-semibold text-emerald-600" id="v26-deduction-famille">+100.00 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600 font-semibold">IR Net à Prélever</span>
+                                        <span class="font-bold text-rose-600" id="v26-ir-net">1 741.50 DH</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Net Total 2026 -->
+                            <div class="bg-slate-50 p-4 border-t border-slate-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-bold text-slate-700">NET À PAYER (2026)</span>
+                                    <span class="text-xl font-extrabold text-brand-900" id="v26-net">11 983.50 DH</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BARÈME NOUVEAU (2027) -->
+                        <div class="bg-white rounded-xl border-2 border-emerald-500/40 shadow-sm overflow-hidden flex flex-col justify-between relative">
+                            <div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl">Barème 2027</div>
+                            <div>
+                                <div class="bg-emerald-50/60 px-5 py-3 border-b border-emerald-100 flex justify-between items-center">
+                                    <span class="font-bold text-emerald-900 flex items-center gap-2">
+                                        <i class="fa-solid fa-sparkles text-emerald-600"></i> Barème 2027 (Frais Pro 45%)
+                                    </span>
+                                </div>
+
+                                <div class="p-5 space-y-3">
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600">Salaire Brut Global</span>
+                                        <span class="font-semibold text-slate-800" id="v27-brut">15 000.00 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600" id="v27-retraite-label">Cotisations RCAR (6%)</span>
+                                        <span class="font-semibold text-rose-600" id="v27-retraite">-900.00 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600" id="v27-sante-label">Cotisations CNOPS (2.50%)</span>
+                                        <span class="font-semibold text-rose-600" id="v27-sante">-375.00 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <div>
+                                            <span class="text-slate-600 block">Frais Professionnels (45%)</span>
+                                            <span class="text-[10px] text-slate-400" id="v27-frais-rate">Taux: 45% | Plafond: 2916.67 DH</span>
+                                        </div>
+                                        <span class="font-semibold text-slate-700" id="v27-frais">-2 916.67 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 bg-emerald-50/50 px-2 rounded font-medium">
+                                        <span class="text-slate-700">Salaire Net Imposable (SNI)</span>
+                                        <span class="text-slate-900 font-bold" id="v27-sni">10 808.33 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600">IR Brut (Tranche <span id="v27-ir-tranche">34%</span>)</span>
+                                        <span class="font-semibold text-slate-700" id="v27-ir-brut">1 341.50 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600">Charges de Famille (<span id="v27-nb-charge">2</span> pers)</span>
+                                        <span class="font-semibold text-emerald-600" id="v27-deduction-famille">+100.00 DH</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm py-1 border-b border-slate-100">
+                                        <span class="text-slate-600 font-semibold">IR Net à Prélever</span>
+                                        <span class="font-bold text-emerald-700" id="v27-ir-net">1 241.50 DH</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Net Total 2027 -->
+                            <div class="bg-emerald-500 text-white p-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-bold">NET À PAYER (2027)</span>
+                                    <span class="text-xl font-extrabold" id="v27-net">12 483.50 DH</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: BULLETINS DE PAIE IMPRIMABLE        -->
+        <!-- ========================================== -->
+        <div id="tab-fiche" class="tab-content hidden">
+            <div class="max-w-4xl mx-auto space-y-4">
+                
+                <!-- Print toolbar -->
+                <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 no-print">
+                    <div>
+                        <h3 class="font-bold text-slate-800">Générateur de Bulletin Officiel</h3>
+                        <p class="text-xs text-slate-500">Choisissez le barème pour exporter la fiche au format légal.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <select id="select-fiche-year" onchange="updatePayslipView()" class="rounded-lg border-slate-300 text-sm font-semibold border py-2 px-3 focus:ring-brand-500 focus:border-brand-500">
+                            <option value="2027">Bulletin Nouveau Barème (2027)</option>
+                            <option value="2026">Bulletin Ancien Barème (2026)</option>
+                        </select>
+                        <button onclick="window.print()" class="bg-brand-800 hover:bg-brand-900 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-print"></i> Imprimer / Enregistrer PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Printable Payslip Document -->
+                <div id="printable-payslip" class="bg-white rounded-xl shadow-lg border border-slate-200 p-8 text-slate-800">
+                    
+                    <!-- Payslip Header -->
+                    <div class="flex justify-between items-start border-b-2 border-slate-800 pb-6 mb-6">
+                        <div>
+                            <h2 class="text-2xl font-black uppercase tracking-wider text-slate-900">BULLETIN DE PAIE</h2>
+                            <p class="text-sm text-slate-500">Période: Mensuelle - <span id="ps-period">Janvier 2027</span></p>
+                            <p class="text-xs text-slate-400 mt-1">Organisme / Établissement : <strong id="ps-org-type">ÉTABLISSEMENT PUBLIC (RCAR / CNOPS)</strong></p>
+                            <p class="text-xs text-slate-400">Identifiant : 987654321 | ICE : 000111222333444</p>
+                        </div>
+                        <div class="text-right border-l-2 border-brand-500 pl-4">
+                            <p class="text-sm font-bold text-slate-800">Nom & Prénom: <span class="font-normal text-slate-600">Collaborateur exemple</span></p>
+                            <p class="text-sm font-bold text-slate-800">Matricule: <span class="font-normal text-slate-600">EMP-2026-09</span></p>
+                            <p class="text-sm font-bold text-slate-800">N° Affiliation: <span class="font-normal text-slate-600" id="ps-affil-num">RCAR-987654</span></p>
+                            <p class="text-sm font-bold text-slate-800">Situation Fam.: <span class="font-normal text-slate-600" id="ps-charges-txt">Marié(e) - 2 Enfants</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Breakdown Table -->
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm mb-6">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 uppercase font-bold text-[11px] border-y border-slate-300">
+                                <th class="py-2.5 px-3">Rubrique</th>
+                                <th class="py-2.5 px-3 text-right">Base / Nombre</th>
+                                <th class="py-2.5 px-3 text-right">Taux / Tranche</th>
+                                <th class="py-2.5 px-3 text-right">Gains (DH)</th>
+                                <th class="py-2.5 px-3 text-right">Retenues (DH)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr>
+                                <td class="py-2.5 px-3 font-medium">Salaire de Base</td>
+                                <td class="py-2.5 px-3 text-right" id="ps-base-hours">173.33 hrs</td>
+                                <td class="py-2.5 px-3 text-right">-</td>
+                                <td class="py-2.5 px-3 text-right font-semibold text-slate-800" id="ps-brut-val">15 000.00</td>
+                                <td class="py-2.5 px-3 text-right text-slate-400">-</td>
+                            </tr>
+                            <tr id="ps-row-exore" class="hidden">
+                                <td class="py-2.5 px-3 font-medium text-slate-600">Indemnités Exonérées / Primes</td>
+                                <td class="py-2.5 px-3 text-right">-</td>
+                                <td class="py-2.5 px-3 text-right">-</td>
+                                <td class="py-2.5 px-3 text-right font-semibold text-slate-800" id="ps-exo-val">0.00</td>
+                                <td class="py-2.5 px-3 text-right text-slate-400">-</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2.5 px-3 text-slate-700" id="ps-retraite-title">Cotisation RCAR (Retraite)</td>
+                                <td class="py-2.5 px-3 text-right" id="ps-retraite-base">15 000.00</td>
+                                <td class="py-2.5 px-3 text-right" id="ps-retraite-rate">6.00%</td>
+                                <td class="py-2.5 px-3 text-right text-slate-400">-</td>
+                                <td class="py-2.5 px-3 text-right text-rose-600 font-medium" id="ps-retraite-val">900.00</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2.5 px-3 text-slate-700" id="ps-sante-title">Cotisation CNOPS (Couverture Médicale)</td>
+                                <td class="py-2.5 px-3 text-right" id="ps-sante-base">15 000.00</td>
+                                <td class="py-2.5 px-3 text-right" id="ps-sante-rate">2.50%</td>
+                                <td class="py-2.5 px-3 text-right text-slate-400">-</td>
+                                <td class="py-2.5 px-3 text-right text-rose-600 font-medium" id="ps-sante-val">375.00</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2.5 px-3 text-slate-700">Impôt sur le Revenu Net (IR)</td>
+                                <td class="py-2.5 px-3 text-right" id="ps-sni-val">10 808.33 (SNI)</td>
+                                <td class="py-2.5 px-3 text-right" id="ps-ir-rate">34%</td>
+                                <td class="py-2.5 px-3 text-right text-slate-400">-</td>
+                                <td class="py-2.5 px-3 text-right text-rose-600 font-medium" id="ps-ir-val">1 241.50</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Summary & Net Calculation Footer -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t-2 border-slate-300">
+                        <!-- Recap Table -->
+                        <div class="space-y-1.5 text-xs text-slate-600">
+                            <div class="flex justify-between">
+                                <span>Salaire Brut Imposable (SBI):</span>
+                                <span class="font-bold text-slate-800" id="ps-sbi">15 000.00 DH</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Frais Professionnels Déd.:</span>
+                                <span class="font-bold text-slate-800" id="ps-frais">2 916.67 DH</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Salaire Net Imposable (SNI):</span>
+                                <span class="font-bold text-slate-800" id="ps-sni-recap">10 808.33 DH</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Déductions pour charges de famille:</span>
+                                <span class="font-bold text-emerald-600" id="ps-ded-fam">100.00 DH</span>
+                            </div>
+                        </div>
+
+                        <!-- Big Net Payable Box -->
+                        <div class="bg-slate-900 text-white rounded-lg p-4 flex flex-col justify-center items-center text-center">
+                            <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">NET À PAYER AU SALARIÉ</span>
+                            <span class="text-3xl font-black text-emerald-400 mt-1" id="ps-net-final">12 483.50 DH</span>
+                            <span class="text-[10px] text-slate-400 mt-1">Payé par virement bancaire</span>
+                        </div>
+                    </div>
+
+                    <!-- Signatures -->
+                    <div class="mt-12 pt-8 border-t border-slate-200 grid grid-cols-2 gap-8 text-center text-xs text-slate-500">
+                        <div>
+                            <p class="font-semibold text-slate-700 mb-8">Signature & Cachet de l'Employeur</p>
+                            <p class="text-[10px] italic">Document généré informatiquement</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-slate-700 mb-8">Signature du Salarié</p>
+                            <p class="text-[10px] italic">"Lu et approuvé"</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: CAS PRATIQUE DETAILLE (15 000 DH)    -->
+        <!-- ========================================== -->
+        <div id="tab-cas" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div class="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
+                    <div class="bg-brand-50 text-brand-700 p-3 rounded-xl font-bold">
+                        <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Cas Pratique Détaillé RCAR + CNOPS : Salaire Brut de 15 000 DH</h2>
+                        <p class="text-sm text-slate-500">Hypothèses : Salarié affilié au RCAR & CNOPS, marié avec 2 personnes à charge (Déduction famille = 100 DH/mois).</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    
+                    <!-- Etape par etape 2026 -->
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-slate-800 text-lg border-b pb-2 flex items-center justify-between">
+                            <span>Barème 2026 (RCAR + CNOPS)</span>
+                            <span class="text-xs font-semibold bg-slate-100 text-slate-600 px-2 py-1 rounded">2026</span>
+                        </h3>
+
+                        <ol class="space-y-3 text-sm">
+                            <li class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                <span class="font-bold text-brand-900 block">1. Cotisation RCAR (Retraite)</span>
+                                Taux de 6% sur le SBI (plafonné à 16 000 DH/mois).<br>
+                                <code class="text-xs bg-slate-200 px-1 py-0.5 rounded">15 000 × 6,00% = 900,00 DH</code>
+                            </li>
+                            <li class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                <span class="font-bold text-brand-900 block">2. Cotisation CNOPS (Assurance Maladie)</span>
+                                Taux de 2,50% sur le Salaire Brut Imposable sans plafond.<br>
+                                <code class="text-xs bg-slate-200 px-1 py-0.5 rounded">15 000 × 2,50% = 375,00 DH</code>
+                            </li>
+                            <li class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                <span class="font-bold text-brand-900 block">3. Frais Professionnels (2026)</span>
+                                SBI > 6 500 DH ⇒ Taux 25%. Plafond mensuel = 2 916,67 DH.<br>
+                                Calcul théorique : 15 000 × 25% = 3 750 DH.<br>
+                                Retenu = <code class="text-xs bg-slate-200 px-1 py-0.5 rounded">MIN(3750, 2916.67) = 2 916,67 DH</code>
+                            </li>
+                            <li class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                <span class="font-bold text-brand-900 block">4. Salaire Net Imposable (SNI)</span>
+                                <code class="text-xs bg-slate-200 px-1 py-0.5 rounded">15 000 - 900 - 375 - 2 916,67 = 10 808,33 DH</code>
+                            </li>
+                            <li class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                <span class="font-bold text-brand-900 block">5. IR Brut & Net (Barème 2026)</span>
+                                Tranche [8 333,34 à 15 000 DH/mois] ⇒ Taux = 34%, Somme à déduire = 1 833,33 DH.<br>
+                                IR Brut = <code class="text-xs bg-slate-200 px-1 py-0.5 rounded">(10 808,33 × 34%) - 1 833,33 = 1 841,50 DH</code><br>
+                                IR Net = <code class="text-xs bg-slate-200 px-1 py-0.5 rounded">1 841,50 - 100 (Charges) = 1 741,50 DH</code>
+                            </li>
+                            <li class="bg-brand-900 text-white p-3 rounded-lg font-bold flex justify-between">
+                                <span>NET À PAYER (2026)</span>
+                                <span>11 983.50 DH</span>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <!-- Etape par etape Nouveau Barème 2027 -->
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-emerald-900 text-lg border-b border-emerald-200 pb-2 flex items-center justify-between">
+                            <span>Barème 2027 (Frais Pro 45%)</span>
+                            <span class="text-xs font-semibold bg-emerald-100 text-emerald-800 px-2 py-1 rounded">2027</span>
+                        </h3>
+
+                        <ol class="space-y-3 text-sm">
+                            <li class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                                <span class="font-bold text-emerald-900 block">1. Cotisation RCAR (Retraite)</span>
+                                Identique : <code class="text-xs bg-emerald-100/60 px-1 py-0.5 rounded">15 000 × 6,00% = 900,00 DH</code>
+                            </li>
+                            <li class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                                <span class="font-bold text-emerald-900 block">2. Cotisation CNOPS (Assurance Maladie)</span>
+                                Identique : <code class="text-xs bg-emerald-100/60 px-1 py-0.5 rounded">15 000 × 2,50% = 375,00 DH</code>
+                            </li>
+                            <li class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                                <span class="font-bold text-emerald-900 block">3. Frais Professionnels (Taux 45% - Plafond 2 916,67 DH)</span>
+                                Calcul théorique : 15 000 × 45% = 6 750,00 DH.<br>
+                                Retenu (Plafonné) = <code class="text-xs bg-emerald-100/60 px-1 py-0.5 rounded">MIN(6750, 2916.67) = 2 916,67 DH</code>
+                            </li>
+                            <li class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                                <span class="font-bold text-emerald-900 block">4. Salaire Net Imposable (SNI)</span>
+                                <code class="text-xs bg-emerald-100/60 px-1 py-0.5 rounded">15 000 - 900 - 375 - 2 916,67 = 10 808,33 DH</code>
+                            </li>
+                            <li class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                                <span class="font-bold text-emerald-900 block">5. IR Brut & Net (Barème 2027)</span>
+                                Tranche [8 333,34 à 15 000 DH/mois] ⇒ Taux = 34%, Somme à déduire = 2 333,33 DH.<br>
+                                IR Brut = <code class="text-xs bg-emerald-100/60 px-1 py-0.5 rounded">(10 808,33 × 34%) - 2 333,33 = 1 341,50 DH</code><br>
+                                IR Net = <code class="text-xs bg-emerald-100/60 px-1 py-0.5 rounded">1 341,50 - 100 (Charges) = 1 241,50 DH</code>
+                            </li>
+                            <li class="bg-emerald-600 text-white p-3 rounded-lg font-bold flex justify-between">
+                                <span>NET À PAYER (2027)</span>
+                                <span>12 483.50 DH</span>
+                            </li>
+                        </ol>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: FORMULES EXCEL & BAREMES FISCAUX   -->
+        <!-- ========================================== -->
+        <div id="tab-formulas" class="tab-content hidden space-y-6">
+            
+            <!-- Excel Formulas Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-file-excel text-emerald-600 text-2xl"></i> Formules Excel RCAR & CNOPS
+                        </h2>
+                        <p class="text-sm text-slate-500">Supposons que la cellule <strong>B2</strong> contient le Salaire Brut Global et <strong>B3</strong> le nombre de personnes à charge.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    
+                    <div class="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-800 text-sm">1. Cotisation RCAR (Taux 6%, Plafond 960.00 DH / mois)</span>
+                            <button onclick="copyFormula('f-rcar')" class="text-xs bg-white border hover:bg-slate-100 font-semibold px-2 py-1 rounded text-slate-600"><i class="fa-regular fa-copy"></i> Copier</button>
+                        </div>
+                        <code id="f-rcar" class="block font-mono text-xs bg-slate-900 text-emerald-400 p-3 rounded-md overflow-x-auto">=MIN(B2 * 0.06; 960.00)</code>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-800 text-sm">2. Cotisation CNOPS (Taux 2.50% sans plafond)</span>
+                            <button onclick="copyFormula('f-cnops')" class="text-xs bg-white border hover:bg-slate-100 font-semibold px-2 py-1 rounded text-slate-600"><i class="fa-regular fa-copy"></i> Copier</button>
+                        </div>
+                        <code id="f-cnops" class="block font-mono text-xs bg-slate-900 text-emerald-400 p-3 rounded-md overflow-x-auto">=B2 * 0.025</code>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-800 text-sm">3. Frais Professionnels 2027 (Taux 45% - Plafond 2 916,67 DH/mois)</span>
+                            <button onclick="copyFormula('f-frais')" class="text-xs bg-white border hover:bg-slate-100 font-semibold px-2 py-1 rounded text-slate-600"><i class="fa-regular fa-copy"></i> Copier</button>
+                        </div>
+                        <code id="f-frais" class="block font-mono text-xs bg-slate-900 text-emerald-400 p-3 rounded-md overflow-x-auto">=MIN(B2 * 0.45; 2916.67)</code>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-800 text-sm">4. Salaire Net Imposable (SNI RCAR / CNOPS) 2027</span>
+                            <button onclick="copyFormula('f-sni')" class="text-xs bg-white border hover:bg-slate-100 font-semibold px-2 py-1 rounded text-slate-600"><i class="fa-regular fa-copy"></i> Copier</button>
+                        </div>
+                        <code id="f-sni" class="block font-mono text-xs bg-slate-900 text-emerald-400 p-3 rounded-md overflow-x-auto">=B2 - MIN(B2*0.06; 960.00) - (B2*0.025) - MIN(B2*0.45; 2916.67)</code>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-800 text-sm">5. Calcul de l'IR Brut (Barème 2027 Mensuel)</span>
+                            <button onclick="copyFormula('f-ir2027')" class="text-xs bg-white border hover:bg-slate-100 font-semibold px-2 py-1 rounded text-slate-600"><i class="fa-regular fa-copy"></i> Copier</button>
+                        </div>
+                        <code id="f-ir2027" class="block font-mono text-xs bg-slate-900 text-emerald-400 p-3 rounded-md overflow-x-auto">=SI(SNI<=5000; 0; SI(SNI<=6666.67; SNI*0.10 - 500; SI(SNI<=8333.33; SNI*0.20 - 1166.67; SI(SNI<=15000; SNI*0.34 - 2333.33; SNI*0.37 - 2783.33))))</code>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-800 text-sm">6. IR Net Final (Après Déduction Charges de Famille)</span>
+                            <button onclick="copyFormula('f-irnet')" class="text-xs bg-white border hover:bg-slate-100 font-semibold px-2 py-1 rounded text-slate-600"><i class="fa-regular fa-copy"></i> Copier</button>
+                        </div>
+                        <code id="f-irnet" class="block font-mono text-xs bg-slate-900 text-emerald-400 p-3 rounded-md overflow-x-auto">=MAX(0; IR_BRUT - (MIN(B3; 6) * 50))</code>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Grilles Fiscales comparatives -->
+            <!-- Explications Réglementation RCAR -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-book text-brand-600"></i> Rappel Réglementaire RCAR
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                        <span class="font-bold text-slate-800 block mb-1">Régime Général (RG)</span>
+                        Assujettissement obligatoire des agents non titulaires des collectivités locales, organismes publics et semi-publics.
+                        <ul class="list-disc ml-4 mt-1 space-y-0.5 text-slate-600">
+                            <li>Part Salariée : 6%</li>
+                            <li>Part Patronale : 6%</li>
+                            <li>Plafond : 4 x Plafond CNSS (24 000 DH/mois)</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                        <span class="font-bold text-slate-800 block mb-1">Régime Complémentaire (RC)</span>
+                        Régime conventionnel ou individuel facultatif par points d'épargne retraite.
+                        <ul class="list-disc ml-4 mt-1 space-y-0.5 text-slate-600">
+                            <li>Cotisation Salariée : Taux au choix (ex: 3%, 6%, 9%)</li>
+                            <li>Cotisation Patronale : Selon convention de l'organisme</li>
+                            <li>Base : Totalité du salaire brut imposable</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                        <span class="font-bold text-slate-800 block mb-1">Traitement Fiscal IR</span>
+                        Les cotisations RCAR (RG + RC) sont 100% déductibles pour la détermination du Salaire Net Imposable (SNI), ce qui réduit l'assiette de l'Impôt sur le Revenu (IR).
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Toast Notification for Copy -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-slate-900 text-white text-xs px-4 py-3 rounded-lg shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none flex items-center gap-2 z-50">
+        <i class="fa-solid fa-check text-emerald-400"></i> Formule copiée dans le presse-papier !
+    </div>
+
+    <!-- JavaScript Engine -->
+    <script>
+        // Global State
+        const state = {
+            brut: 15000,
+            exo: 0,
+            charges: 2,
+            regime: 'RCAR'
+        };
+
+        // Helper function to safely update text content without crashing on missing elements
+        function safeSetText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        }
+
+        // Moroccan Payroll Tax Rules Engine (RCAR / CNOPS vs CNSS / AMO)
+        function computePayroll(brut, exo, charges, year, regime = 'RCAR') {
+            const sbi = Math.max(0, brut);
+            
+            let retraite = 0;
+            let sante = 0;
+
+            if (regime === 'RCAR') {
+                // RCAR : Taux 6% salarial avec plafond 16 000 DH/mois (soit max 960 DH)
+                retraite = Math.min(sbi * 0.06, 960.00);
+                // CNOPS : Taux 2,50% salarial sans plafond
+                sante = sbi * 0.025;
+            } else {
+                // CNSS : Taux 4.48% salarial avec plafond 6 000 DH/mois (soit max 268.80 DH)
+                retraite = Math.min(sbi * 0.0448, 268.80);
+                // AMO : Taux 2.26% salarial sans plafond
+                sante = sbi * 0.0226;
+            }
+
+            // 2. Professional Expenses
+            let fraisRate = year === 2027 ? 45 : (sbi <= 6500 ? 35 : 25);
+            let maxFraisMonthly = 2916.67; // 35,000 DH annually
+            let fraisProCalculated = sbi * (fraisRate / 100);
+            let fraisPro = Math.min(fraisProCalculated, maxFraisMonthly);
+
+            // 3. Taxable Net Income (SNI)
+            const sni = Math.max(0, sbi - retraite - sante - fraisPro);
+
+            // 4. IR Calculation according to Year Scale
+            let irRate = 0;
+            let deductionSum = 0;
+
+            if (year === 2026) {
+                // Barème IR 2026
+                if (sni <= 3333.33) {
+                    irRate = 0; deductionSum = 0;
+                } else if (sni <= 5000.00) {
+                    irRate = 10; deductionSum = 333.33;
+                } else if (sni <= 6666.67) {
+                    irRate = 20; deductionSum = 833.33;
+                } else if (sni <= 8333.33) {
+                    irRate = 30; deductionSum = 1500.00;
+                } else if (sni <= 15000.00) {
+                    irRate = 34; deductionSum = 1833.33;
+                } else {
+                    irRate = 37; deductionSum = 2283.33;
+                }
+            } else {
+                // Barème IR 2027 (Nouveau Barème)
+                if (sni <= 5000.00) {
+                    irRate = 0; deductionSum = 0;
+                } else if (sni <= 6666.67) {
+                    irRate = 10; deductionSum = 500.00;
+                } else if (sni <= 8333.33) {
+                    irRate = 20; deductionSum = 1166.67;
+                } else if (sni <= 15000.00) {
+                    irRate = 34; deductionSum = 2333.33;
+                } else {
+                    irRate = 37; deductionSum = 2783.33;
+                }
+            }
+
+            let irBrut = Math.max(0, (sni * (irRate / 100)) - deductionSum);
+
+            // Family Deductions (50 DH per dependent, max 6 dependents = 300 DH)
+            let validCharges = Math.min(Math.max(0, charges), 6);
+            let deductionFamille = validCharges * 50;
+            let irNet = Math.max(0, irBrut - deductionFamille);
+
+            // Net Payable Calculation
+            let netAPayer = (sbi + exo) - retraite - sante - irNet;
+
+            return {
+                brutGlobal: sbi,
+                exo: exo,
+                retraite: retraite,
+                sante: sante,
+                fraisPro: fraisPro,
+                fraisRate: fraisRate,
+                sni: sni,
+                irRate: irRate,
+                irBrut: irBrut,
+                deductionFamille: deductionFamille,
+                irNet: irNet,
+                netAPayer: netAPayer
+            };
+        }
+
+        // Payslip renderer
+        function updatePayslipView() {
+            const year = parseInt(document.getElementById('select-fiche-year')?.value) || 2027;
+            const res = computePayroll(state.brut, state.exo, state.charges, year, state.regime);
+
+            safeSetText('ps-period', `Janvier ${year}`);
+            safeSetText('ps-charges-txt', state.charges > 0 ? `Marié(e) - ${state.charges} Charge(s)` : 'Célibataire / Sans Charge');
+            safeSetText('ps-brut-val', formatDH(res.brutGlobal, false));
+
+            if (state.regime === 'RCAR') {
+                safeSetText('ps-org-type', 'ÉTABLISSEMENT PUBLIC (RCAR / CNOPS)');
+                safeSetText('ps-affil-num', 'RCAR-987654');
+                safeSetText('ps-retraite-title', 'Cotisation RCAR (Retraite)');
+                safeSetText('ps-retraite-rate', '6.00%');
+                safeSetText('ps-retraite-base', formatDH(Math.min(res.brutGlobal, 16000), false));
+                safeSetText('ps-sante-title', 'Cotisation CNOPS (Couverture Médicale)');
+                safeSetText('ps-sante-rate', '2.50%');
+            } else {
+                safeSetText('ps-org-type', 'SOCIÉTÉ PRIVÉE (CNSS / AMO)');
+                safeSetText('ps-affil-num', 'CNSS-123456');
+                safeSetText('ps-retraite-title', 'Cotisation CNSS (Prestations Sociales)');
+                safeSetText('ps-retraite-rate', '4.48%');
+                safeSetText('ps-retraite-base', formatDH(Math.min(res.brutGlobal, 6000), false));
+                safeSetText('ps-sante-title', 'Cotisation AMO (Assurance Maladie)');
+                safeSetText('ps-sante-rate', '2.26%');
+            }
+
+            const exoRow = document.getElementById('ps-row-exore');
+            if (exoRow) {
+                if (state.exo > 0) {
+                    exoRow.classList.remove('hidden');
+                    safeSetText('ps-exo-val', formatDH(state.exo, false));
+                } else {
+                    exoRow.classList.add('hidden');
+                }
+            }
+
+            safeSetText('ps-retraite-val', formatDH(res.retraite, false));
+            safeSetText('ps-sante-base', formatDH(res.brutGlobal, false));
+            safeSetText('ps-sante-val', formatDH(res.sante, false));
+
+            safeSetText('ps-sni-val', formatDH(res.sni, false) + ' (SNI)');
+            safeSetText('ps-ir-rate', res.irRate + '%');
+            safeSetText('ps-ir-val', formatDH(res.irNet, false));
+
+            safeSetText('ps-sbi', formatDH(res.brutGlobal));
+            safeSetText('ps-frais', formatDH(res.fraisPro));
+            safeSetText('ps-sni-recap', formatDH(res.sni));
+            safeSetText('ps-ded-fam', formatDH(res.deductionFamille));
+
+            safeSetText('ps-net-final', formatDH(res.netAPayer));
+        }
+
+        // Calculation Master Function
+        function calculateAll() {
+            const exoEl = document.getElementById('input-exore');
+            const exoInput = exoEl ? parseFloat(exoEl.value) || 0 : 0;
+            state.exo = exoInput;
+
+            const regimeEl = document.getElementById('select-regime');
+            if (regimeEl) state.regime = regimeEl.value;
+
+            // Description label update
+            const desc = document.getElementById('regime-desc');
+            if (desc) {
+                if (state.regime === 'RCAR') {
+                    desc.textContent = 'RCAR: 6.00% du SBI (plafond 16 000 DH/mois) | CNOPS: 2.50% du SBI sans plafond.';
+                } else {
+                    desc.textContent = 'CNSS: 4.48% du SBI (plafond 6 000 DH/mois) | AMO: 2.26% du SBI sans plafond.';
+                }
+            }
+
+            const res2026 = computePayroll(state.brut, state.exo, state.charges, 2026, state.regime);
+            const res2027 = computePayroll(state.brut, state.exo, state.charges, 2027, state.regime);
+
+            // Update Labels dynamically
+            const retraiteLabelText = state.regime === 'RCAR' ? 'Cotisations RCAR (6% Max 960.00)' : 'Cotisations CNSS (4.48% Max 268.80)';
+            const santeLabelText = state.regime === 'RCAR' ? 'Cotisations CNOPS (2.50%)' : 'Cotisations AMO (2.26%)';
+
+            safeSetText('v26-retraite-label', retraiteLabelText);
+            safeSetText('v26-sante-label', santeLabelText);
+            safeSetText('v27-retraite-label', retraiteLabelText);
+            safeSetText('v27-sante-label', santeLabelText);
+
+            // Update 2026 UI
+            safeSetText('v26-brut', formatDH(res2026.brutGlobal));
+            safeSetText('v26-retraite', '-' + formatDH(res2026.retraite));
+            safeSetText('v26-sante', '-' + formatDH(res2026.sante));
+            safeSetText('v26-frais-rate', `Taux: ${res2026.fraisRate}% | Plafond: 2916.67 DH`);
+            safeSetText('v26-frais', '-' + formatDH(res2026.fraisPro));
+            safeSetText('v26-sni', formatDH(res2026.sni));
+            safeSetText('v26-ir-tranche', res2026.irRate + '%');
+            safeSetText('v26-ir-brut', formatDH(res2026.irBrut));
+            safeSetText('v26-nb-charge', state.charges);
+            safeSetText('v26-deduction-famille', '+' + formatDH(res2026.deductionFamille));
+            safeSetText('v26-ir-net', formatDH(res2026.irNet));
+            safeSetText('v26-net', formatDH(res2026.netAPayer));
+
+            // Update 2027 Card UI
+            safeSetText('v27-brut', formatDH(res2027.brutGlobal));
+            safeSetText('v27-retraite', '-' + formatDH(res2027.retraite));
+            safeSetText('v27-sante', '-' + formatDH(res2027.sante));
+            safeSetText('v27-frais-rate', `Taux: ${res2027.fraisRate}% | Plafond: 2916.67 DH`);
+            safeSetText('v27-frais', '-' + formatDH(res2027.fraisPro));
+            safeSetText('v27-sni', formatDH(res2027.sni));
+            safeSetText('v27-ir-tranche', res2027.irRate + '%');
+            safeSetText('v27-ir-brut', formatDH(res2027.irBrut));
+            safeSetText('v27-nb-charge', state.charges);
+            safeSetText('v27-deduction-famille', '+' + formatDH(res2027.deductionFamille));
+            safeSetText('v27-ir-net', formatDH(res2027.irNet));
+            safeSetText('v27-net', formatDH(res2027.netAPayer));
+
+            // Update Summary Gain Header
+            const gainMensuel = res2027.netAPayer - res2026.netAPayer;
+            const gainAnnuel = gainMensuel * 12;
+            const pctGain = res2026.netAPayer > 0 ? (gainMensuel / res2026.netAPayer) * 100 : 0;
+            const ecoIR = res2026.irNet - res2027.irNet;
+
+            const tauxEff2026 = res2026.brutGlobal > 0 ? (res2026.irNet / res2026.brutGlobal) * 100 : 0;
+            const tauxEff2027 = res2027.brutGlobal > 0 ? (res2027.irNet / res2027.brutGlobal) * 100 : 0;
+
+            safeSetText('gain-mensuel', (gainMensuel >= 0 ? '+' : '') + formatDH(gainMensuel));
+            safeSetText('gain-pourcentage', (gainMensuel >= 0 ? '+' : '') + pctGain.toFixed(2) + '% de gain');
+            safeSetText('gain-annuel', formatDH(gainAnnuel));
+            safeSetText('eco-ir', formatDH(ecoIR) + '/mois');
+            safeSetText('taux-effectif-2026', tauxEff2026.toFixed(2) + '%');
+            safeSetText('taux-effectif-2027', tauxEff2027.toFixed(2) + '%');
+
+            updatePayslipView();
+        }
+
+        // Sync functions for inputs and sliders
+        function syncBrutInput(val) {
+            let num = parseFloat(val) || 0;
+            state.brut = num;
+            const slider = document.getElementById('slider-brut');
+            if (slider) slider.value = Math.min(Math.max(num, 3000), 60000);
+            safeSetText('brut-display', formatDH(num));
+            calculateAll();
+        }
+
+        function syncBrutSlider(val) {
+            let num = parseFloat(val) || 0;
+            state.brut = num;
+            const input = document.getElementById('input-brut');
+            if (input) input.value = num;
+            safeSetText('brut-display', formatDH(num));
+            calculateAll();
+        }
+
+        function setQuickBrut(val) {
+            state.brut = val;
+            const input = document.getElementById('input-brut');
+            if (input) input.value = val;
+            const slider = document.getElementById('slider-brut');
+            if (slider) slider.value = Math.min(Math.max(val, 3000), 60000);
+            safeSetText('brut-display', formatDH(val));
+            calculateAll();
+        }
+
+        function setCharge(nb) {
+            state.charges = nb;
+            const buttons = document.querySelectorAll('.charge-btn');
+            buttons.forEach((btn, index) => {
+                if (index === nb) {
+                    btn.className = 'charge-btn bg-brand-800 text-white border border-brand-800 py-1.5 rounded-md text-xs font-semibold';
+                } else {
+                    btn.className = 'charge-btn border border-slate-200 py-1.5 rounded-md text-xs font-semibold hover:bg-slate-50';
+                }
+            });
+            calculateAll();
+        }
+
+        function resetInputs() {
+            state.brut = 15000;
+            state.exo = 0;
+            state.charges = 2;
+            state.regime = 'RCAR';
+            const regimeSelect = document.getElementById('select-regime');
+            if (regimeSelect) regimeSelect.value = 'RCAR';
+            const inputBrut = document.getElementById('input-brut');
+            if (inputBrut) inputBrut.value = 15000;
+            const sliderBrut = document.getElementById('slider-brut');
+            if (sliderBrut) sliderBrut.value = 15000;
+            safeSetText('brut-display', '15 000 DH');
+            const inputExo = document.getElementById('input-exore');
+            if (inputExo) inputExo.value = 0;
+            setCharge(2);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const activeContent = document.getElementById(tabId);
+            if (activeContent) activeContent.classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-800', 'text-white', 'shadow');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+            });
+
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+                activeBtn.classList.add('bg-brand-800', 'text-white', 'shadow');
+            }
+        }
+
+        // Format helper
+        function formatDH(val, includeSymbol = true) {
+            let formatted = new Intl.NumberFormat('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+            return includeSymbol ? formatted + ' DH' : formatted;
+        }
+
+        // Clipboard Helper
+        function copyFormula(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const text = el.innerText;
+            
+            // Standard fallback copy
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = text;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+
+            // Toast UI
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.classList.remove('opacity-0', 'pointer-events-none');
+                toast.classList.add('opacity-100');
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'pointer-events-none');
+                    toast.classList.remove('opacity-100');
+                }, 2500);
+            }
+        }
+
+        // Window Load Initialization
+        window.onload = function() {
+            calculateAll();
+        };
+    </script>
+</body>
+</html>
